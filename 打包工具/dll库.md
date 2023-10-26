@@ -1,0 +1,3 @@
+dll全称动态链接库（dynamic Link libary），是软件在windows中实现共享函数库的一种方式。
+webpack利用DLLplugin来实现的打包dll文件。
+目前vue的脚手架以及react脚手架都不再使用dll了，因为webpack提供的性能已经足够了

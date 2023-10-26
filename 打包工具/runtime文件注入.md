@@ -1,0 +1,1 @@
+通过inlineChunkHtmlPlugin将runtime文件或者其他js文件注入到html文件中，减少请求。因为runtime文件一般情况下代码量较少，注入到html文件中可以减少网络请求

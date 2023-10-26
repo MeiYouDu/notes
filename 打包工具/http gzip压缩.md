@@ -1,0 +1,2 @@
+通过compressionWebpackPlugin进行压缩，在生产环境压缩成gzip格式。
+详细配置参考webpack官方文档。

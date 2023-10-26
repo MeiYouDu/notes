@@ -1,0 +1,144 @@
+# 概述
+proxy是es6提供的一个构造函数，它创建一个对象来代理其他对象的基本行为，如`get，set，defining property`。proxy通常被用于属性的访问，验证，数据输入等场景。
+proxy可以理解为在目标对象前假设一层“拦截”，外界访问这个对象都需要经过这个拦截，经过拦截的时候可以推外界的访问改写或者过滤。
+# 参数
+Proxy构造函数有两个参数：
+
+- `target`：要代理的目标对象
+- `handler`：一个描述哪些行为需要被拦截以及拦截行为的对象。
+# 静态方法
+## Proxy.revocable()
+创建一个可撤销的Proxy实例。
+# handler
+## handler.get()
+### 参数
+
+- `target`: 被代理的对象。
+- `property`: 被访问的属性。
+- `receiver`: Proxy实例或者继承Proxy实例的对象。
+### return
+可以返回任何值。
+### 拦截
+他可以拦截以下行为
+
+- 访问属性：`proxy[property]`或者`proxy.property`。
+- 访问继承的属性：`Object.create(proxy)[property]`。
+- `Reflect.get()`。
+### 约束
+如果违反了以下约束，proxy会提示类型错误
+
+- 如果要访问的目标属性是不可写以及不可配置的，则返回的值必须与该目标属性的值相同。
+- 如果要访问的目标属性没有配置访问方法，即get方法是undefined的，则返回值必须为undefined。
+### 例子
+```javascript
+const target = {name: "arbor", age: 18, sex: "man"};
+
+Object.defineProperty(target, "address", {
+  value: "beijing",
+  configurable: false,
+  enumerable: false,
+  writable: false,
+})
+// 会报错，改变了原本的值，因为defineProperty设置了writable属性为false，拦截器返回值的时候跟原始值不一样就会报错
+proxyGet.address
+
+/**
+ * @type {ProxyHandler}
+ */
+const getHandler = {
+  get(target, property, receiver) {
+    console.log(target, property);
+    return 20
+  }
+}
+const proxyGet = new Proxy(target, getHandler);
+const test = Object.create(proxyGet);
+console.log(test.a); // 返回20, 而且receiver是test（如果打印receiver，会造成死循环，线程也会卡死）。
+```
+## handler.set()
+### 参数
+
+- `target`: 目标对象。
+- `property`: 访问的属性。
+- `value`: 给属性设置的值。
+- `receiver`: 直接被赋值的对象，通常是proxy本身，但有的时候set()可以被原型链调用。 比如对象的`obj.name = "jen"`，并且`obj`不是一个`Proxy`实例，并且它本身没有`name`属性，但如果他的原型链上有`Proxy`实例，那么proxy的`set()`方法就会被调用，同时`obj`会被当作`receiver`被返回。
+### return
+返回一个boolean
+
+- 如果返回true，表示赋值成功。
+- 如果返回false，且赋值发生在严格模式，会返回一个类型错误。
+### 拦截
+`set()`方法拦截如下行为
+
+- 属性赋值：`proxy[foo] = bar`and`proxy.foo = bar`
+- 继承属性赋值：`Object.creat(proxy)[foo] = bar`
+- `Reflect.set()`
+### 约束
+
+- 如果要访问的目标属性是不可写以及不可配置的，则返回的值必须与该目标属性的值相同。
+- 如果要访问的目标属性没有配置访问方法，即get方法是undefined的，则返回值必须为undefined。
+- 严格模式下，如果`set()`返回false则会抛错。
+### 例子
+#### 简单使用
+```javascript
+const target = {name: "arbor", age: 18, sex: "man"};
+
+// ---------------------------------------------------------------- 赋值 ----------------------------------------------------------------
+/**
+ * @type {ProxyHandler}
+ */
+const sethandler = {
+  set(target, prop, value, receiver) {
+    target[prop] = value;
+    console.log(target, prop, value, receiver);
+    return true;
+  }
+}
+
+const ProxySet = new Proxy(target, sethandler);
+
+ProxySet.name = 'whl';
+
+console.log(ProxySet);
+
+// ---------------------------------------------------------------- 继承 ----------------------------------------------------------------
+
+const inheritProxySet = Object.create(ProxySet);
+
+console.log(inheritProxySet.name); // whl,在原型链上拿到name属性
+
+inheritProxySet.name = "yqm"; // receiver 是 inheritProxySet, 而inheritProxySet本身不会有name属性，因为代理会把赋值的行为拦截掉，并把属性赋值给target
+```
+#### 校验数据
+```javascript
+/**
+ * @type {ProxyHandler}
+ */
+const validater = {
+  set(target, prop, value) {
+    if (prop === 'age') {
+      if (!Number.isInteger(value)) {
+        throw new TypeError('The age is not an integer');
+      }
+      if (value > 200) {
+        throw new RangeError('The age seems invalid');
+      }
+    }
+    // The default behavior to store the value
+    target[prop] = value;
+
+    // Indicate success
+    return true;
+  }
+}
+
+const person = new Proxy({}, validater);
+
+// person.age = 201; // 报错
+// person.age = 100.1; // 报错
+person.age = 80
+console.log(person);
+```
+## handler.construct()
+
+

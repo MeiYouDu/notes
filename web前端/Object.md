@@ -1,0 +1,155 @@
+# object prototype
+
+---
+
+## 原型和原型属性
+对于构造函数来说，他拥有原型属性，原型属性是构建实例的蓝图。如果这个构造函数是被其他的构造函数构建出来的，那么他也会有原型，他的原型指向他的构造函数的原型属性。总结：
+
+- 实例的原型指向构造函数的原型属性。
+- 构造函数的原型属性可以被实例通过原型链访问到。
+## 原型对象
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727858529-98812b40-e266-4507-a426-6b6aead27432.png#averageHue=%232c2d33&clientId=u0c02102b-1420-4&from=paste&id=u83f314f9&originHeight=404&originWidth=1082&originalType=url&ratio=1&rotation=0&showTitle=false&size=66959&status=done&style=none&taskId=u5a08a8b9-5536-4029-bbac-788caa46c4d&title=)
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727858457-3d49ea45-74b4-43e0-8993-591227e3466b.png#averageHue=%23679793&clientId=u0c02102b-1420-4&from=paste&id=ucbd33496&originHeight=150&originWidth=700&originalType=url&ratio=1&rotation=0&showTitle=false&size=9249&status=done&style=none&taskId=u87dba22a-5ab0-444c-9fc0-872e177f5e2&title=)
+当访问person2的valueOf函数的时候会发生的事情。
+在person2上本身是没有valueOf这个对象的。所有浏览器会走以下流程：
+
+- 浏览器一开始会检查person2中是否有valueOf这个方法，就如同person2的构造函数所描述的，他并没有这个方法。
+- 然后浏览器会检查person2的prototype对象，它上面也没有则继续找原型对象的原型对象是否有valueOf,如果存在则调用。
+
+要注意的是，这些方法和属性并不是在原型链上从一个对象拷贝到另一个对象，而是通过原型链被访问到。
+另一个需要注意的是，原型对象在检索属性的时候才会被遍历，增加或者删除属性都不会检索原型对象（比如给一个对象某个属性赋值，或者删除对象的某个属性，它只会影响对象自身的而不会直接影响原型链）。
+es2015之前通过person__proto__来访问对象的原型对象。
+es2015之后可以通过Object.getPrototypeOf(obj)来访问。
+## 原型对象被继承的属性是在哪里定义的
+Object属性大致分为两类：
+
+- 以Object.prototype开头的属性。
+- 单纯以Object开头的属性。
+
+其中以Object.prototype开头的属性会被原型链上的对象继承，而单纯以Object开头的属性只存在于Object这个构造函数上。
+### 继承和原型链
+每个对象都有保存链接其他对象的原型，而原型也会有它自己的原型对象，以此类推直到原型对象是null，null没有原型，它通常作为原型链的终点。
+在javascript中几乎所有的对象都继承自Object这个构造函数，而Object刚好位于null之下并与null同处于原型链的顶部。
+## 构造函数属性
+实例通过constructor属性访问他构造函数。
+同时实例可以通过constructor的name属性访问构造函数的名字。
+## 修改原型
+修改构造函数原型属性上的值会影响所有由这个构造函数创建的实例对象。
+# js中的继承(inheritance in javascript)
+## 对象成员汇总
+
+- 在构造函数内部创建的对象，他们被绑定给实例对象。
+- 在构造函数上定义的对象，他们通常只在构造函数上可用，可以称他们为静态属性或者方法。
+- 构造函数的prototype上的对象，他们可以被所有实例对象继承。
+- 实例对象上的属性。直接在实例对象上创建属性。
+## 原型继承
+```javascript
+function Person(first,last,age,gender,interests){
+  this.name={
+    first,
+    last
+  };
+  this.age=age;
+  this.gender=gender;
+  this.interests=interests;
+};
+function Teacher(first,last,age,gender,interests,subject){
+  Person.call(this,first,last,age,gender,interests);
+  this.subject=subject;
+}
+//只是在Teacher内部调用Person还不是继承，还需要继承prototype。继承之后还需要修正constructor
+Teacher.prototype=Object.create(Person.prototype);
+Object.defineProperty(Teacher.prototype,"constructor",{
+  value:"Teacher",
+  enumerable:false,
+  writable:true
+});
+```
+# JSON
+## 简述
+JSON是一种用来表示结构化数据标准文本格式，它的基于javascript对象语法，由[Douglas Crockford](https://en.wikipedia.org/wiki/Douglas_Crockford)推广。它虽然跟javascript的对象语法很相近，但是它可以脱离javascript独立被使用。
+JSON是一个用于通过网络传递数据的字符串。我们需要在访问数据的时候把它转化成原生对象。javascript中提供了转化他们的方法。
+小贴士：
+将字符串转变成原生的对象的过程被称为反序列化（deserialization）。将原生对象转化成字符串的过程称为序列化（serialization）。
+## 一些注意事项
+
+   - JSON中可以表示多种数据类型除了方法。
+   - JSON需要使用双引号表示字符串和属性名，单引号在JSON中不可使用。
+   - javascript中的对象属性名可以不用引号，但是在JSON中属性名必须用双引号表示。
+# 属性的简洁写法
+ES6 允许在大括号里面，直接写入变量和函数，作为对象的属性和方法。这样的书写更加简洁。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727858486-88c437b2-7f9a-47ec-9e0c-531742f1b5e8.png#averageHue=%232f2f2c&clientId=u0c02102b-1420-4&from=paste&id=ud2791b83&originHeight=306&originWidth=1174&originalType=url&ratio=1&rotation=0&showTitle=false&size=38745&status=done&style=none&taskId=u0c3969a2-9017-45a5-b1df-35e68878eac&title=)
+上面代码中，变量foo直接写在大括号里面。这时，属性名就是变量名, 属性值就是变量值。    
+这种写法很棒但是在构造函数不允许使用这种写法。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727858511-fefc7712-3175-432a-b7a2-f403ff0c4d4a.png#averageHue=%23292927&clientId=u0c02102b-1420-4&from=paste&id=u8410614d&originHeight=336&originWidth=1190&originalType=url&ratio=1&rotation=0&showTitle=false&size=32075&status=done&style=none&taskId=udcf55088-7349-4664-9424-d66881ba0a4&title=)
+obj.f是一个简写的方法不能用作构造函数。
+# name属性
+函数的name属性，返回函数名。对象方法也是函数，因此也有name属性。
+## 对象方法有自己的name属性
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727858577-385693e0-89e9-4efa-8c48-cfd3fb36d09e.png#averageHue=%232b2d3a&clientId=u0c02102b-1420-4&from=paste&id=uf4deb16e&originHeight=528&originWidth=632&originalType=url&ratio=1&rotation=0&showTitle=false&size=43270&status=done&style=none&taskId=u7eacda15-f886-4300-bcb5-3c188d58b3c&title=)
+## 对象上用了getter和setter存取值函数。
+如果对象的方法使用了取值函数（getter）和存值函数（setter），则name属性不是在该方法上
+面，而是该方法的属性的描述对象的get和set属性上面，返回值是方法名前加上get和set。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727859531-e3f58b34-86e1-4f08-93fc-47420d9fd963.png#averageHue=%232b2e25&clientId=u0c02102b-1420-4&from=paste&id=u1aae8d1d&originHeight=508&originWidth=1202&originalType=url&ratio=1&rotation=0&showTitle=false&size=222861&status=done&style=none&taskId=ub8c27374-debf-4ed9-84e4-31aa874bdef&title=)
+## 使用了bind方法
+有两种特殊情况：bind方法创造的函数，name属性返回bound加上原函数的名字；Function构造函数
+创造的函数，name属性返回anonymous。
+## 使用symbol
+如果对象的方法是一个 Symbol 值，那么name属性返回的是这个 Symbol 值的描述。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727859479-108a6018-9af5-4ae2-bcd5-5b1d84fa4dd0.png#averageHue=%232d3127&clientId=u0c02102b-1420-4&from=paste&id=u58856658&originHeight=368&originWidth=1178&originalType=url&ratio=1&rotation=0&showTitle=false&size=146008&status=done&style=none&taskId=u146cbb81-f6ab-4d84-84a5-d3697b4477d&title=)
+# 属性的可枚举性和遍历
+## 可枚举性
+对象的每个属性有一个描述对象，用来控制该属性的行为。可以通过Object.getOwnPropertyDescriptor方法获取该属性的描述对象
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727859347-921c1582-3a2d-477d-bcb1-073316758209.png#averageHue=%232c2f3d&clientId=u0c02102b-1420-4&from=paste&id=uad78ab9f&originHeight=484&originWidth=494&originalType=url&ratio=1&rotation=0&showTitle=false&size=42709&status=done&style=none&taskId=u6235d3af-98bc-4c0c-8137-18683fe5acb&title=)
+上面的代码获取了对象obj中的属性a，他是可以被枚举的。我们通过设置一个属性是否可枚举来约束他是否可以被遍历。例如对象的length属性，对象的toString方法，这些属性都是不可枚举的，这样也就避免了被遍历。
+ES6 规定，所有 Class 的原型的方法都是不可枚举的。（跟方法的声明方式有关系，下面会详细说明）。
+
+- forin循环：会遍历对象自身以及继承的可枚举属性。
+- Object.Keys(): 只遍历对象自身的可枚举属性。
+- JSON.Stringify(): 只序列化对象自身的可枚举属性。
+- Object.assign(): 只拷贝对象自身的可枚举属性。
+
+综上所述，因为forin可能会造成一些混乱，所以我们应该尽量避免使用这种遍历方式。
+## 属性的遍历
+ES6 一共有 5 种方法可以遍历对象的属性。
+### for...in
+for...in循环遍历对象自身的和继承的可枚举属性（不含 Symbol 属性）。
+### Object.keys(obj)
+Object.keys返回一个数组，包括对象自身的（不含继承的）所有可枚举属性（不含 Symbol 属
+性）的键名。
+### Object.getOwnPropertyNames(obj)
+Object.getOwnPropertyNames返回一个数组，包含对象自身的所有属性（不含 Symbol 属性，但
+是包括不可枚举属性）的键名。
+### Object.getOwnPropertySymbols(obj)
+Object.getOwnPropertySymbols返回一个数组，包含对象自身的所有 Symbol 属性的键名。
+### Reflect.ownKeys(obj)
+Reflect.ownKeys返回一个数组，包含对象自身的（不含继承的）所有键名，不管键名是 Symbol 
+或字符串，也不管是否可枚举。
+以上的 5 种方法遍历对象的键名，都遵守同样的属性遍历的次序规则。
+
+- 首先遍历所有数值键，按照数值升序排列。
+- 其次遍历所有字符串键，按照加入时间升序排列。
+- 最后遍历所有 Symbol 键，按照加入时间升序排列。
+
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727859476-2663e441-03c9-4c37-a3b2-b229af55d3a2.png#averageHue=%23424242&clientId=u0c02102b-1420-4&from=paste&id=ubb188af4&originHeight=166&originWidth=1384&originalType=url&ratio=1&rotation=0&showTitle=false&size=33088&status=done&style=none&taskId=uf31e0e63-ec62-46be-80bd-3fb7dc9d389&title=)
+# super关键字
+super关键字指向当前对象的原型。
+super只能在对象方法里面使用即：
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727859838-253b7b6f-cd0d-4aef-80f8-fa27850a09d0.png#averageHue=%23131313&clientId=u0c02102b-1420-4&from=paste&id=u4fa91f39&originHeight=648&originWidth=1340&originalType=url&ratio=1&rotation=0&showTitle=false&size=70305&status=done&style=none&taskId=u62f50454-68f3-4714-b85c-f2205983586&title=)
+其他的使用方式都会报错：
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727860257-3adeb870-904a-4f4b-a90c-0a7a0e8c7d10.png#averageHue=%23191919&clientId=u0c02102b-1420-4&from=paste&id=u34be3b55&originHeight=798&originWidth=1352&originalType=url&ratio=1&rotation=0&showTitle=false&size=77331&status=done&style=none&taskId=u3da45bd3-d080-4d6f-bf75-f0376a50ea5&title=)
+注意：
+只有上面的对象方法才会被js的引擎解析成对象的方法。
+其他的三种都是先创建方法然后赋值给对象的这个属性，目前只有对象方法的简写才能被引擎确认是对象的方法。
+super.foo在js引擎内部相当于Object.getPrototypeOf(this).foo或者Object.getPrototypeOf(this).foo.call(this)。
+# Object.is()
+用来比较两个值是否相等。在es5的时候只有两个运算符“==”和“===”。他们都有缺点，前者会自动转化类型，后者NaN不等于NaN，而且+0等于-0。
+然后就有了这个方法。他的行为基本跟严格相等一样，不同之处在于
+不同之处只有两个：一是+0不等于-0，二是NaN等于自身。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727860371-e91bfbae-4f5a-4b49-b664-a78e8a766f82.png#averageHue=%232d2d2d&clientId=u0c02102b-1420-4&from=paste&id=u8de5f309&originHeight=306&originWidth=1358&originalType=url&ratio=1&rotation=0&showTitle=false&size=42317&status=done&style=none&taskId=u7849ccd0-1ff5-4e1b-b8f4-4156867dc9b&title=)
+# Object.fromEntries()
+Object.fromEntries（）。用于将一个键值对数组转为对象。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/12763837/1649727860450-629e019a-d79d-4322-af94-6350d1704c22.png#averageHue=%231d1d1d&clientId=u0c02102b-1420-4&from=paste&id=ub5c8dfa5&originHeight=288&originWidth=1348&originalType=url&ratio=1&rotation=0&showTitle=false&size=35958&status=done&style=none&taskId=ud9c93611-bdf7-440c-99df-5eaaa8a99cb&title=)
+# Object.entries()
+Object.entries()方法返回一个数组，成员是参数对象自身的（不含继承的）所有可遍历（enumerable）属性
+的键值对数组。会过滤属性名是symbol的值。

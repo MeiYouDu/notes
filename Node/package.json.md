@@ -1,0 +1,190 @@
+# 描述
+`package.json`必须是一个真正的JSON而不是一个javascript对象。
+下面介绍一些常用的属性
+# name
+如果我们要发布自己的包，`name`属性是非常重要的，它和`version`属性一起组成一个唯一值，之后如果想改变仓库就只能通过修改仓库的`version`属性。
+**规则：**
+
+- `name`属性的长度必须少于214个字符，其中包括`scope`。
+- 作用域包的`name`属性可以用`.`或者`dash`作为开头，但是不能没有作用于。
+- 包的`name`属性中不能包含大写字母。
+- 因为`name`属性最终会变成URL的一部分，或者是命令行的一个参数，也会是一个目录名称。因此，`name`属性中不能包含url中不安全的字符。
+
+**注意：**
+
+- 不要跟Node核心模块同名。
+- 不要在`name`属性中包含"js"或者"node"，如果需要区分他们的运行环境，可以在`engines`属性中设置。
+- 因为`name`属性的值会被当作参数传入`require()`函数，所以`name`属性尽量短小精悍。
+- 注意跟其他仓库同名的问题，命名之前可以在[npm官网](https://www.npmjs.com/)查一下。
+# version
+用来控制代码包的版本，版本必遵循[node-semver](https://github.com/npm/node-semver)库，可以被这个库解析。
+# description
+一个`string`，用来描述仓库，方便用户搜索我们的包。
+# keywords
+一个`array`，方便用户来搜索我们的仓库。
+# homepage
+主页
+```json
+{
+  "homepage": "https://github.com/owner/project#readme"
+}
+```
+# files
+`files`属性是一个文件模式的数组，它用来描述当你的软件包被当作依赖安装时所包含的入口(比如类型入口和程序入口，根据实际情况会有多个)。文件模式的语法类似`.gitignore`，不同是，`files`中包含的文件、路径、或者目标模式会被打包进最终的压缩包，如果漏掉了这个字段就会使用模式模式`["*"]`，也就意味着会打包所有文件。
+无论`files`属性的数组中是否存在，一些特定的文件或者路径是默认被包含或者被排除的。
+在根目录或者子目录创建`.npmignore`可以让一些文件一直被排除在外。在根目录下创建这个文件时，他不能覆盖`files`属性中所包含的文件、路径。但如果将这个文件创建在子目录下时，这个文件将覆盖`files`属性。`.npmignore`的机制类似于`.gitignore`，如果没有`.npmignore`则会默认使用`.gitignore`。
+`files`属性中包含的文件不能使用`.npmignore`或者`.gitignore`排除（但是还是会被子目录的`.npmignore`文件覆盖-已经测试过了）。
+核心的文件永远会被打包，而且不会被覆盖。
+
+- `package.json`文件
+- `README`
+- `LICENSE`/`LICENCE`
+- `main`属性指向的文件
+
+当然，有些文件也永远被排除在外
+
+- `.git`
+- `CVS`
+- `.svn`
+- `.hg`
+- `.lock-wscript`
+- `.wafpickle-N`
+- `.*.swp`
+- `.DS_Store`
+- `._*`
+- `npm-debug.log`
+- `.npmrc`
+- `node_modules`
+- `config.gypi`
+- `*.orig`
+- `package-lock.json` (use [npm-shrinkwrap.json](https://docs.npmjs.com/cli/v9/configuring-npm/npm-shrinkwrap-json) if you wish it to be published)
+# main
+`main`字段是一个模块ID，是整个程序的主要入口。如果你的包的名字叫"foo"，我们使用`require("foo")`引入，然后你的主模块的`exports`就会被返回。
+`main`字段所指向的文件应该是一个基于包文件夹根目录的模块。
+作为大多数模块，都拥有主模块。
+如果`main`字段缺失，则会默认将包文件夹根目录下的`index.js`当作入口。
+# browser
+如果我们想让我们的模块只在客户端被使用，我们可以设置`browser`字段来代替`main`字段。这将帮助暗示使用者这个软件版不能在`node`环境中使用。
+# bin
+很多包都会有一个或者多个可执行的文件可以安装到`PATH`环境变量里面。
+
+- 当全局安装该包时，这些文件会被符号连接到全局的bins目录下或者创建一个执行`bin`字段指定文件的cmd文件，接下来就可以通过`name`或者`name.cmd`来运行这个文件。
+- 当作为依赖被安装时，这个文件会被链接到这个这个包中，然后我们可以通过`npm exec`直接执行，也可以通过`npm run-script`在其他的scripts中调用。
+
+假如我们这样配置
+```json
+{
+  "bin": {
+    "myapp": "./cli.js"
+  }
+}
+```
+当我们全局安装这个包的时候
+
+- 在Unix操作系统下将会创建符号连接从`cli.js`到`/usr/local/bin/myapp`；
+- 在windows操作系统下通常会在`C:\Users\{UserName}\AppData\Roaming\npm\myapp.cmd`创建cmd文件用来执行`cli.js`脚本。
+
+如果你只有一个可执行文件，那可以按照以下格式写，下面两种是一样的
+```json
+{
+  "name": "my-program",
+  "version": "1.2.5",
+  "bin": "./path/to/program"
+}
+
+{
+  "name": "my-program",
+  "version": "1.2.5",
+  "bin": {
+    "my-program": "./path/to/program"
+  }
+}
+```
+**注意：**确定`bin`字段对应的所有文件都使用`#!/usr/bin/env node`作为开头，除非这个脚本运行时不需要node。
+# man
+TODO
+# dependencies
+`dependencies`是一个特定的简单对象，用键值对的形式存储包的名称和版本。版本是一个具有语义的string。
+**注意：**请不要在`dependencies`中放入测试、转译、或者其他的开发时工具。
+下面是一些简单的规则范围，详细的规则请查看[semver](https://github.com/npm/node-semver#versions)这个库。
+
+- `>version`：匹配大于`version`的。
+- `>=version`：etc
+- `<=version`：etc
+- `<ersion`：etc
+- `1.2.x`：1.2.0，1.2.1，etc，但是不会匹配`1.3.0`。
+- `~version`：TODO
+- `^version`：TODO
+- `http://...`：可以使用一个URL作为版本，这个url指向的是`.tgz`文件（类似本地路径）。
+- `*`：匹配任何版本。
+- `""`：空字符串，效果类似于`*`。
+- `version1 - version2`： 效果类似于`>=version1 <=version2`。
+- `range1 || range2`：满足两者中的一个就可以使用。
+- `git...`： 使用git URL也可以作为依赖的版本。
+- `user/repo`：github的URL也可以作为版本范围。
+- `path/path/path`：可以使用本地路径作为版本参数。
+## URLs作为依赖
+你需要制定一个压缩包(tarball)的URL作为版本范围。
+当运行`npm install`时这个压缩包将会被下载并解压安装到本地。
+## github URLs
+npm在`1.1.65`支持使用github的URL作为版本范围。下面有个几个例子
+```json
+{
+  "name": "foo",
+  "version": "0.0.0",
+  "dependencies": {
+    "express": "expressjs/express",
+    "mocha": "mochajs/mocha#4727d357ea",
+    "module": "user/repo#feature\/branch"
+  }
+}
+```
+## 本地路径（local paths）
+npm在`2.0.0`版本之后可以使用本地路径作为版本范围。这个路径可以指向一个`.tgz`文件。下面有个实际的例子
+```json
+"devDependencies": {
+		"arbor-cesium-drawer": "./arbor-cesium-drawer-0.1.2.tgz",
+}
+```
+上面的例子中版本范围指向的是我使用`npm pack`命令打包出来的npm包，运行`npm install`命令就会直接解压并安装这个包，然后就可以使用了。
+**注意：**
+
+- 这个功能对于本地离线测试来说非常的方便，我们不需要外部服务就可以直接使用，但是在发布我们的项目到公共仓库时不应该使用。（别人本地肯定是没有这个包的）
+- 使用本地包作为版本范围时执行`npm install`只会安装这个包本身，如果这个包还依赖了别的库则不会自动安装，需要我们进入安装完的包里面执行`npm install`
+# devDependencies
+如果有用户想要在项目中使用我们的包，那他应该不会想下载我们库项目中的开发依赖项，比如文档框架和额外测试。
+所以使用`devDependencies`对象罗列这些依赖。
+这些依赖项会在根目录运行`npm link`和`npm install`时被安装。同时可以使用npm配置参数来管理他们。
+在进行非特定平台的构建步骤时，比如编译ts成js，可以使用`prepare`脚本配合在`devDependency`存放依赖来实现。
+在执行`publish`命令钱执行`prepare`脚本，这样用户就不需要自己编译且能享用这个库的功能。开发模式运行`npm install`，他也会在执行完这个命令命令之后执行这个脚本。
+# peerDependencies
+我们在编写插件库的时候会考虑插件和主仓库的兼容性，我们需要在插件库中暴露一个特殊的接口。
+在npm3-npm6时，`peerDependencies`中的依赖项不会在安装依赖时一同被安装，并且会报出警告如果存在不可用的依赖版本。
+但是从npm7以后，`peerDependencies`默认自动安装。尝试强行安装其他版本冲突的插件可能会报错。所以我们尽可能的让扩大依赖版本范围，而不是指定一个patch版本。
+假设只有主仓库主版本的变更才会导致我们的插件兼容性问题，因此如果我们想表示我们的插件可以兼容所有1.x版本的主仓库，可以使用`"^1.0"`和`"1.x"`来表示它，如果我们依赖于一个次要版本比如`1.5.2`，则可以使用`^1.5.2`
+# engines
+可以指定我们的包工作的node版本。
+```json
+{
+  "engines": {
+    "node": ">=0.10.3 <15"
+  }
+}
+```
+作为一个依赖项时，如果不指定则表示所有的node都可以运行。
+我们也可以通过`engines`字段来指定npm的版本。
+```json
+{
+  "engines": {
+    "npm": "~1.0.20"
+  }
+}
+```
+除非用户设置`engine-strict`，不然当安装的我们的包时`engines`字段将只会产生警告。
+# publishConfig
+这个字段里面的参数会在发布时用到，如果我们想设置`tag`，`registry`，`access`的话这个字段非常好用。
+# DEFAULT VALUES
+npm的默认值。
+
+- `"scripts": {"start": "node server.js"}`，如果有`server.js`文件在包的根目录下，那么npm执行`start`命令时会默认执行`node server.js`。
+- `"scripts":{"install": "node-gyp rebuild"}`，如果在包的根目录下存在`binding.gyp`文件，且我们没有定义`install`或`preinstall`，npm将默认运行`install`命令使用node-gyp来编译。
